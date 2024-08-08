@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,8 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 	type returnVals struct {
-		Valid bool `json:"valid"`
+		Cleaned_body string `json:"cleaned_body"`
+		Valid        bool   `json:"valid"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -29,7 +31,8 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respBody := returnVals{
-		Valid: true,
+		Cleaned_body: getCleanedBody(params.Body),
+		Valid:        true,
 	}
 
 	respondWithJSON(w, http.StatusOK, respBody)
@@ -57,4 +60,22 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	}
 	w.WriteHeader(code)
 	w.Write(dat)
+}
+
+func getCleanedBody(body string) string {
+	profaneWords := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
+	}
+
+	words := strings.Split(body, " ")
+	for i, word := range words {
+		lower_word := strings.ToLower(word)
+		if _, ok := profaneWords[lower_word]; ok {
+			words[i] = "****"
+		}
+	}
+
+	return strings.Join(words, " ")
 }
