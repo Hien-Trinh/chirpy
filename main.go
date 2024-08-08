@@ -30,6 +30,8 @@ func main() {
 		http.Redirect(w, r, "/admin/metrics", http.StatusMovedPermanently)
 	})
 
+	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
