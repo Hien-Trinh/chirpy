@@ -25,6 +25,10 @@ func main() {
 	mux.HandleFunc("GET /api/reset", apiCfg.handlerReset)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
+	mux.HandleFunc("GET /admin/metrics/", func(w http.ResponseWriter, r *http.Request) {
+		// Redirect to /admin/metrics if slash is present
+		http.Redirect(w, r, "/admin/metrics", http.StatusMovedPermanently)
+	})
 
 	srv := &http.Server{
 		Addr:    ":" + port,
