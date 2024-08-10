@@ -27,7 +27,7 @@ func (a *apiConfig) handlerChirpsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirp, err := a.db.CreateChirp(params.Body)
+	chirp, err := a.db.CreateChirp(getCleanedBody(params.Body))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't create chirp: %s", err))
 		return
