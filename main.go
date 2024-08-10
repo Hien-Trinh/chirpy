@@ -3,10 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/Hien-Trinh/chirpy/internal/database"
 )
 
 type apiConfig struct {
 	fileserverHits int
+	db             *database.DB
 }
 
 func main() {
@@ -16,6 +19,12 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 	}
+	db, err := database.NewDB("database.json")
+	if err != nil {
+		log.Fatalf("Error opening database: %s", err)
+	}
+
+	apiCfg.db = db
 
 	mux := http.NewServeMux()
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
@@ -30,7 +39,8 @@ func main() {
 		http.Redirect(w, r, "/admin/metrics", http.StatusMovedPermanently)
 	})
 
-	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsPost)
+	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsGet)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
