@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -44,6 +45,23 @@ func (a *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, chirps)
+
+}
+
+func (a *apiConfig) handlerChirpsGetById(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %s", err))
+		return
+	}
+
+	chirp, err := a.db.GetChirpById(id)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't get chirp: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, chirp)
 
 }
 
