@@ -16,6 +16,10 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 	}
+	db, err := NewDB("database.json")
+	if err != nil {
+		log.Fatalf("Error opening database: %s", err)
+	}
 
 	mux := http.NewServeMux()
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
@@ -30,7 +34,8 @@ func main() {
 		http.Redirect(w, r, "/admin/metrics", http.StatusMovedPermanently)
 	})
 
-	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+	mux.HandleFunc("POST /api/chirps", db.handlerChirpsPost)
+	mux.HandleFunc("GET /api/chirps", db.handlerChirpsGet)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

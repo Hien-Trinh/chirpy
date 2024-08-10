@@ -2,18 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 )
 
-func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
+type Chirp struct {
+	Id   int    `json:"id"`
+	Body string `json:"body"`
+}
+
+func (db *DB) handlerChirpsPost(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
-	}
-	type returnVals struct {
-		Cleaned_body string `json:"cleaned_body"`
-		Valid        bool   `json:"valid"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -30,12 +32,24 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respBody := returnVals{
-		Cleaned_body: getCleanedBody(params.Body),
-		Valid:        true,
+	chirp, err := db.CreateChirp(params.Body)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't create chirp: %s", err))
+		return
 	}
 
-	respondWithJSON(w, http.StatusOK, respBody)
+	respondWithJSON(w, 201, chirp)
+}
+
+func (db *DB) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
+	chirps, err := db.GetChirps()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get chirp: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, chirps)
+
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
