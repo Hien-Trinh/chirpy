@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"os"
 	"sort"
 	"sync"
@@ -127,7 +128,9 @@ func (db *DB) GetChirpById(i int) (Chirp, error) {
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
 	_, err := os.ReadFile(db.path)
-	if errors.Is(err, os.ErrNotExist) {
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+	if errors.Is(err, os.ErrNotExist) || *dbg {
 		dbStructure := DBStructure{
 			Chirps: make(map[int]Chirp),
 			Users:  make(map[int]User),
