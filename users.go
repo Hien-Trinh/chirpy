@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 func (a *apiConfig) handlerUsersPost(w http.ResponseWriter, r *http.Request) {
@@ -29,30 +28,30 @@ func (a *apiConfig) handlerUsersPost(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 201, user)
 }
 
-func (a *apiConfig) handlerUsersGet(w http.ResponseWriter, r *http.Request) {
-	chirps, err := a.db.GetChirps()
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get chirp: %s", err))
-		return
-	}
+// func (a *apiConfig) handlerUsersGet(w http.ResponseWriter, r *http.Request) {
+// 	chirps, err := a.db.GetChirps()
+// 	if err != nil {
+// 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get chirp: %s", err))
+// 		return
+// 	}
 
-	respondWithJSON(w, http.StatusOK, chirps)
+// 	respondWithJSON(w, http.StatusOK, chirps)
 
-}
+// }
 
-func (a *apiConfig) handlerUsersGetById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %s", err))
-		return
-	}
+// func (a *apiConfig) handlerUsersGetById(w http.ResponseWriter, r *http.Request) {
+// 	id, err := strconv.Atoi(r.PathValue("id"))
+// 	if err != nil {
+// 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %s", err))
+// 		return
+// 	}
 
-	chirp, err := a.db.GetChirpById(id)
-	if err != nil {
-		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't get chirp: %s", err))
-		return
-	}
+// 	chirp, err := a.db.GetChirpById(id)
+// 	if err != nil {
+// 		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't get chirp: %s", err))
+// 		return
+// 	}
 
-	respondWithJSON(w, http.StatusOK, chirp)
+// 	respondWithJSON(w, http.StatusOK, chirp)
 
-}
+// }
