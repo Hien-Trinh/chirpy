@@ -145,33 +145,6 @@ func (a *apiConfig) handlerUsersPut(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 200, user_without_password)
 }
 
-func (a *apiConfig) handlerUsersGet(w http.ResponseWriter, r *http.Request) {
-	chirps, err := a.db.GetUsers()
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get chirp: %s", err))
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, chirps)
-}
-
-func (a *apiConfig) handlerUsersGetById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %s", err))
-		return
-	}
-
-	chirp, err := a.db.GetChirpById(id)
-	if err != nil {
-		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't get chirp: %s", err))
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, chirp)
-
-}
-
 func passwordHash(password string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
