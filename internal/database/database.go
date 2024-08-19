@@ -24,8 +24,9 @@ type Chirp struct {
 }
 
 type User struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
+	Id       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // NewDB creates a new database connection
@@ -69,7 +70,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 }
 
 // CreateUser creates a new user and saves it to disk
-func (db *DB) CreateUser(email string) (User, error) {
+func (db *DB) CreateUser(email, password string) (User, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return User{}, err
@@ -78,8 +79,9 @@ func (db *DB) CreateUser(email string) (User, error) {
 	uniqueId := len(dbStructure.Users) + 1
 
 	user := User{
-		Id:    uniqueId,
-		Email: email,
+		Id:       uniqueId,
+		Email:    email,
+		Password: password,
 	}
 
 	dbStructure.Users[user.Id] = user
@@ -109,6 +111,23 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 	return chirps, nil
 }
 
+// GetUsers returns all users in the database
+func (db *DB) GetUsers() ([]User, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]User, 0, len(dbStructure.Users))
+	for _, user := range dbStructure.Users {
+		users = append(users, user)
+	}
+
+	sort.Slice(users, func(i, j int) bool { return users[i].Id < users[j].Id })
+
+	return users, nil
+}
+
 // GetChirpsById returns chirp with matching id in the database
 func (db *DB) GetChirpById(i int) (Chirp, error) {
 	chirp := Chirp{}
@@ -123,6 +142,48 @@ func (db *DB) GetChirpById(i int) (Chirp, error) {
 	}
 
 	return chirp, nil
+}
+
+// GetUserById returns user with matching id in the database
+func (db *DB) GetUserById(i int) (User, error) {
+	user := User{}
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return user, err
+	}
+
+	user, ok := dbStructure.Users[i]
+	if !ok {
+		return user, errors.New("User not found")
+	}
+
+	return user, nil
+}
+
+func (db *DB) UpdateUser(i int, new_email, new_password string) (User, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	_, ok := dbStructure.Users[i]
+	if !ok {
+		return User{}, errors.New("User not found")
+	}
+
+	new_user := User{
+		Id:       i,
+		Email:    new_email,
+		Password: new_password,
+	}
+	dbStructure.Users[i] = new_user
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return User{}, err
+	}
+
+	return new_user, nil
 }
 
 // ensureDB creates a new database file if it doesn't exist

@@ -3,13 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Hien-Trinh/chirpy/internal/database"
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileserverHits int
 	db             *database.DB
+	jwtSecret      string
 }
 
 func main() {
@@ -25,6 +28,12 @@ func main() {
 	}
 
 	apiCfg.db = db
+
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	apiCfg.jwtSecret = os.Getenv("JWT_SECRET")
 
 	mux := http.NewServeMux()
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
@@ -44,6 +53,8 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{id}", apiCfg.handlerChirpsGetById)
 
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersPost)
+	mux.HandleFunc("PUT /api/users", apiCfg.handlerUsersPut)
+	mux.HandleFunc("POST /api/login", apiCfg.handlerLoginPost)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
