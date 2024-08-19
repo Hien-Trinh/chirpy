@@ -44,7 +44,6 @@ func (a *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, chirps)
-
 }
 
 func (a *apiConfig) handlerChirpsGetById(w http.ResponseWriter, r *http.Request) {
