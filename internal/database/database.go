@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 )
 
 type DB struct {
@@ -14,8 +15,9 @@ type DB struct {
 	mux  *sync.RWMutex
 }
 type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps        map[int]Chirp        `json:"chirps"`
+	Users         map[int]User         `json:"users"`
+	RefreshTokens map[int]RefreshToken `json:"refresh_tokens"`
 }
 
 type Chirp struct {
@@ -27,6 +29,13 @@ type User struct {
 	Id       int    `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type RefreshToken struct {
+	Id        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 // NewDB creates a new database connection
@@ -94,6 +103,32 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 	return user, nil
 }
 
+// CreateRefreshToken creates a new refresh token and saves it to disk
+func (db *DB) CreateRefreshToken(user_id int, refresh_token_string string, refresh_token_expires_at time.Time) (RefreshToken, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return RefreshToken{}, err
+	}
+
+	uniqueId := len(dbStructure.RefreshTokens) + 1
+
+	refresh_token := RefreshToken{
+		Id:        uniqueId,
+		UserID:    user_id,
+		Token:     refresh_token_string,
+		ExpiresAt: refresh_token_expires_at,
+	}
+
+	dbStructure.RefreshTokens[refresh_token.Id] = refresh_token
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return RefreshToken{}, err
+	}
+
+	return refresh_token, nil
+}
+
 // GetChirps returns all chirps in the database
 func (db *DB) GetChirps() ([]Chirp, error) {
 	dbStructure, err := db.loadDB()
@@ -126,6 +161,23 @@ func (db *DB) GetUsers() ([]User, error) {
 	sort.Slice(users, func(i, j int) bool { return users[i].Id < users[j].Id })
 
 	return users, nil
+}
+
+// GetRefreshTokens returns all refresh tokens in the database
+func (db *DB) GetRefreshTokens() ([]RefreshToken, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	refresh_tokens := make([]RefreshToken, 0, len(dbStructure.RefreshTokens))
+	for _, refresh_token := range dbStructure.RefreshTokens {
+		refresh_tokens = append(refresh_tokens, refresh_token)
+	}
+
+	sort.Slice(refresh_tokens, func(i, j int) bool { return refresh_tokens[i].Id < refresh_tokens[j].Id })
+
+	return refresh_tokens, nil
 }
 
 // GetChirpsById returns chirp with matching id in the database
@@ -186,6 +238,27 @@ func (db *DB) UpdateUser(i int, new_email, new_password string) (User, error) {
 	return new_user, nil
 }
 
+func (db *DB) RevokeRefreshToken(i int) error {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	_, ok := dbStructure.RefreshTokens[i]
+	if !ok {
+		return errors.New("refresh token not found")
+	}
+
+	delete(dbStructure.RefreshTokens, i)
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
 	_, err := os.ReadFile(db.path)
@@ -193,8 +266,9 @@ func (db *DB) ensureDB() error {
 	flag.Parse()
 	if errors.Is(err, os.ErrNotExist) || *dbg {
 		dbStructure := DBStructure{
-			Chirps: make(map[int]Chirp),
-			Users:  make(map[int]User),
+			Chirps:        make(map[int]Chirp),
+			Users:         make(map[int]User),
+			RefreshTokens: make(map[int]RefreshToken),
 		}
 		return db.writeDB(dbStructure)
 	}
