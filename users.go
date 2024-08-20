@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/Hien-Trinh/chirpy/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -65,46 +63,10 @@ func (a *apiConfig) handlerUsersPost(w http.ResponseWriter, r *http.Request) {
 
 func (a *apiConfig) handlerUsersPut(w http.ResponseWriter, r *http.Request) {
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	token_parsed, err := jwt.ParseWithClaims(token, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.jwtSecret), nil
-	})
+
+	user, err := auth.GetUserByJWT(a.db, a.jwtSecret, token)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Couldn't parse token: %s", err))
-		return
-	}
-
-	claims, ok := token_parsed.Claims.(*jwt.RegisteredClaims)
-	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Couldn't parse claims")
-		return
-	}
-
-	token_expiration_time, err := claims.GetExpirationTime()
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Couldn't get expiration time: %s", err))
-		return
-	}
-
-	if token_expiration_time.Before(time.Now().UTC()) {
-		respondWithError(w, http.StatusUnauthorized, "Token has expired")
-		return
-	}
-
-	subject, err := claims.GetSubject()
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Couldn't get subject: %s", err))
-		return
-	}
-
-	user_id, err := strconv.Atoi(subject)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Couldn't parse user ID")
-		return
-	}
-
-	user, err := a.db.GetUserById(user_id)
-	if err != nil {
-		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't get user: %s", err))
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Couldn't get user: %s", err))
 		return
 	}
 

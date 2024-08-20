@@ -56,6 +56,26 @@ func (db *DB) GetRefreshTokens() ([]RefreshToken, error) {
 	return refresh_tokens, nil
 }
 
+// GetRefreshTokensByToken returns a refresh token by token
+func (db *DB) GetRefreshTokensByToken(token string) (RefreshToken, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return RefreshToken{}, err
+	}
+
+	for _, refresh_token := range dbStructure.RefreshTokens {
+		if refresh_token.Token == token {
+			if refresh_token.ExpiresAt.Before(time.Now().UTC()) {
+				return RefreshToken{}, errors.New("token has expired")
+			}
+			return refresh_token, nil
+		}
+	}
+
+	return RefreshToken{}, errors.New("refresh token not found")
+}
+
+// RevokeRefreshToken revokes a refresh token
 func (db *DB) RevokeRefreshToken(i int) error {
 	dbStructure, err := db.loadDB()
 	if err != nil {
