@@ -238,6 +238,27 @@ func (db *DB) UpdateUser(i int, new_email, new_password string) (User, error) {
 	return new_user, nil
 }
 
+func (db *DB) RevokeRefreshToken(i int) error {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	_, ok := dbStructure.RefreshTokens[i]
+	if !ok {
+		return errors.New("refresh token not found")
+	}
+
+	delete(dbStructure.RefreshTokens, i)
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
 	_, err := os.ReadFile(db.path)

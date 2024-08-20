@@ -43,6 +43,7 @@ func (a *apiConfig) handlerRefreshPost(w http.ResponseWriter, r *http.Request) {
 			respondWithJSON(w, 200, struct {
 				Token string `json:"token"`
 			}{Token: token_signed})
+			return
 		}
 	}
 
