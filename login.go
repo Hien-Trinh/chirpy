@@ -63,7 +63,7 @@ func (a *apiConfig) handlerLoginPost(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				refresh_token_string := hex.EncodeToString([]byte(strconv.Itoa(refresh_token_int)))
-				_, err = a.db.CreateRefreshToken(refresh_token_string, time.Now().Add(refresh_token_expiry).UTC())
+				_, err = a.db.CreateRefreshToken(user.Id, refresh_token_string, time.Now().Add(refresh_token_expiry).UTC())
 				if err != nil {
 					respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't create refresh token: %s", err))
 					return

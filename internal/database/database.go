@@ -33,6 +33,7 @@ type User struct {
 
 type RefreshToken struct {
 	Id        int       `json:"id"`
+	UserID    int       `json:"user_id"`
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
@@ -103,7 +104,7 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 }
 
 // CreateRefreshToken creates a new refresh token and saves it to disk
-func (db *DB) CreateRefreshToken(refresh_token_string string, refresh_token_expires_at time.Time) (RefreshToken, error) {
+func (db *DB) CreateRefreshToken(user_id int, refresh_token_string string, refresh_token_expires_at time.Time) (RefreshToken, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return RefreshToken{}, err
@@ -113,6 +114,7 @@ func (db *DB) CreateRefreshToken(refresh_token_string string, refresh_token_expi
 
 	refresh_token := RefreshToken{
 		Id:        uniqueId,
+		UserID:    user_id,
 		Token:     refresh_token_string,
 		ExpiresAt: refresh_token_expires_at,
 	}
@@ -159,6 +161,23 @@ func (db *DB) GetUsers() ([]User, error) {
 	sort.Slice(users, func(i, j int) bool { return users[i].Id < users[j].Id })
 
 	return users, nil
+}
+
+// GetRefreshTokens returns all refresh tokens in the database
+func (db *DB) GetRefreshTokens() ([]RefreshToken, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	refresh_tokens := make([]RefreshToken, 0, len(dbStructure.RefreshTokens))
+	for _, refresh_token := range dbStructure.RefreshTokens {
+		refresh_tokens = append(refresh_tokens, refresh_token)
+	}
+
+	sort.Slice(refresh_tokens, func(i, j int) bool { return refresh_tokens[i].Id < refresh_tokens[j].Id })
+
+	return refresh_tokens, nil
 }
 
 // GetChirpsById returns chirp with matching id in the database
