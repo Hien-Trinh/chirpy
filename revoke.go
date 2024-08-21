@@ -20,5 +20,5 @@ func (a *apiConfig) handlerRevokePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusNoContent, struct{}{})
+	respondWithJSON(w, http.StatusNoContent, nil)
 }

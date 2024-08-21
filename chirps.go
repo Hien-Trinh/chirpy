@@ -100,7 +100,7 @@ func (a *apiConfig) handlerChirpsDeleteById(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	chirp, err = a.db.DeleteChirpById(id)
+	err = a.db.DeleteChirpById(id)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, fmt.Sprintf("Couldn't delete chirp: %s", err))
 		return
