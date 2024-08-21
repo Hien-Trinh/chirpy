@@ -12,7 +12,7 @@ type Chirp struct {
 }
 
 // CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(author_id int, body string) (Chirp, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return Chirp{}, err
@@ -21,8 +21,9 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	uniqueId := len(dbStructure.Chirps) + 1
 
 	chirp := Chirp{
-		Id:   uniqueId,
-		Body: body,
+		Id:       uniqueId,
+		AuthorId: author_id,
+		Body:     body,
 	}
 
 	dbStructure.Chirps[chirp.Id] = chirp

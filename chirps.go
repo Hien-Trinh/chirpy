@@ -6,16 +6,25 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/Hien-Trinh/chirpy/internal/auth"
 )
 
 func (a *apiConfig) handlerChirpsPost(w http.ResponseWriter, r *http.Request) {
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	user, err := auth.GetUserByJWT(a.db, a.jwtSecret, token)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Couldn't get user: %s", err))
+		return
+	}
+
 	type parameters struct {
 		Body string `json:"body"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
@@ -27,7 +36,7 @@ func (a *apiConfig) handlerChirpsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirp, err := a.db.CreateChirp(getCleanedBody(params.Body))
+	chirp, err := a.db.CreateChirp(user.Id, getCleanedBody(params.Body))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't create chirp: %s", err))
 		return
