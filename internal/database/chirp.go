@@ -68,3 +68,25 @@ func (db *DB) GetChirpById(i int) (Chirp, error) {
 
 	return chirp, nil
 }
+
+// DeleteChirpById deletes chirp with matching id in the database
+func (db *DB) DeleteChirpById(i int) (Chirp, error) {
+	chirp := Chirp{}
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return chirp, err
+	}
+
+	chirp, ok := dbStructure.Chirps[i]
+	if !ok {
+		return chirp, errors.New("Chirp not found")
+	}
+	delete(dbStructure.Chirps, i)
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return Chirp{}, err
+	}
+
+	return chirp, nil
+}
