@@ -72,16 +72,18 @@ func (a *apiConfig) handlerLoginPost(w http.ResponseWriter, r *http.Request) {
 				user_without_password := struct {
 					Id           int    `json:"id"`
 					Email        string `json:"email"`
+					IsChirpyRed  bool   `json:"is_chirpy_red"`
 					Token        string `json:"token"`
 					RefreshToken string `json:"refresh_token"`
 				}{
 					Id:           user.Id,
 					Email:        user.Email,
+					IsChirpyRed:  user.IsChirpyRed,
 					Token:        token_signed,
 					RefreshToken: refresh_token_string,
 				}
 
-				respondWithJSON(w, 200, user_without_password)
+				respondWithJSON(w, http.StatusOK, user_without_password)
 				return
 			}
 		}

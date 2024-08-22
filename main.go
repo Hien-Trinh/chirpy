@@ -13,6 +13,7 @@ type apiConfig struct {
 	fileserverHits int
 	db             *database.DB
 	jwtSecret      string
+	polkaApiKey    string
 }
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	apiCfg.jwtSecret = os.Getenv("JWT_SECRET")
+	apiCfg.polkaApiKey = os.Getenv("POLKA_API_KEY")
 
 	mux := http.NewServeMux()
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
@@ -51,6 +53,7 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsPost)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsGet)
 	mux.HandleFunc("GET /api/chirps/{id}", apiCfg.handlerChirpsGetById)
+	mux.HandleFunc("DELETE /api/chirps/{id}", apiCfg.handlerChirpsDeleteById)
 
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersPost)
 	mux.HandleFunc("PUT /api/users", apiCfg.handlerUsersPut)
@@ -60,6 +63,8 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefreshPost)
 
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevokePost)
+
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerChirpyRedPost)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

@@ -12,7 +12,7 @@ type Chirp struct {
 }
 
 // CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(author_id int, body string) (Chirp, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return Chirp{}, err
@@ -21,8 +21,9 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	uniqueId := len(dbStructure.Chirps) + 1
 
 	chirp := Chirp{
-		Id:   uniqueId,
-		Body: body,
+		Id:       uniqueId,
+		AuthorId: author_id,
+		Body:     body,
 	}
 
 	dbStructure.Chirps[chirp.Id] = chirp
@@ -66,4 +67,25 @@ func (db *DB) GetChirpById(i int) (Chirp, error) {
 	}
 
 	return chirp, nil
+}
+
+// DeleteChirpById deletes chirp with matching id in the database
+func (db *DB) DeleteChirpById(i int) error {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	_, ok := dbStructure.Chirps[i]
+	if !ok {
+		return errors.New("Chirp not found")
+	}
+	delete(dbStructure.Chirps, i)
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
