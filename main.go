@@ -13,6 +13,7 @@ type apiConfig struct {
 	fileserverHits int
 	db             *database.DB
 	jwtSecret      string
+	polkaApiKey    string
 }
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	apiCfg.jwtSecret = os.Getenv("JWT_SECRET")
+	apiCfg.polkaApiKey = os.Getenv("POLKA_API_KEY")
 
 	mux := http.NewServeMux()
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
