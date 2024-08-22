@@ -51,11 +51,13 @@ func (a *apiConfig) handlerUsersPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user_without_password := struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}{
-		Id:    user.Id,
-		Email: user.Email,
+		Id:          user.Id,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 
 	respondWithJSON(w, 201, user_without_password)
@@ -90,18 +92,20 @@ func (a *apiConfig) handlerUsersPut(w http.ResponseWriter, r *http.Request) {
 
 	hashed_password := passwordHash(params.Password)
 
-	user_updated, err := a.db.UpdateUser(user.Id, params.Email, hashed_password)
+	user_updated, err := a.db.UpdateUserCredentials(user.Id, params.Email, hashed_password)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't update user: %s", err))
 		return
 	}
 
 	user_without_password := struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}{
-		Id:    user_updated.Id,
-		Email: user_updated.Email,
+		Id:          user_updated.Id,
+		Email:       user_updated.Email,
+		IsChirpyRed: user_updated.IsChirpyRed,
 	}
 
 	respondWithJSON(w, 200, user_without_password)

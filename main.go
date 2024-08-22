@@ -62,6 +62,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevokePost)
 
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerChirpyRedPost)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
