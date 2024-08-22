@@ -47,7 +47,24 @@ func (a *apiConfig) handlerChirpsPost(w http.ResponseWriter, r *http.Request) {
 
 // handlerChirpsGet returns all chirps
 func (a *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
-	chirps, err := a.db.GetChirps()
+	var err error
+
+	id := r.URL.Query().Get("author_id")
+	author_id := -1
+	if id != "" {
+		author_id, err = strconv.Atoi(id)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Invalid author_id: %s", err))
+			return
+		}
+	}
+
+	sort := r.URL.Query().Get("sort")
+	sort_reverse := false
+	if sort == "desc" {
+		sort_reverse = true
+	}
+	chirps, err := a.db.GetChirps(author_id, sort_reverse)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't get chirp: %s", err))
 		return
